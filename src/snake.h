@@ -12,7 +12,6 @@ class CSnake : public CFramedWindow
 {
 private:
   bool pause_game = false;
-  bool help_menu = false;
   bool death = false;
   int direction = KEY_RIGHT;
   int level = 0;
@@ -22,19 +21,18 @@ private:
   vector <CPoint> snake_parts;
 
   void reset(){
-    pause = false;
-    help = false;
+    pause_game = false;
     death = false;
     direction = KEY_RIGHT;
     level = 0;
-    speed = 40;
+    speed = 50;
     ticks = 0;
     int head_x = rand() % (geom.size.x - 4) + 4;
     int head_y = rand() % (geom.size.y - 4) + 4;
-    parts.clear();
-    parts.push_back(CPoint(head_x, head_y));
-    parts.push_back(CPoint(head_x-1, head_y));
-    parts.push_back(CPoint(head_x-2, head_y));
+    snake_parts.clear();
+    snake_parts.push_back(CPoint(head_x, head_y));
+    snake_parts.push_back(CPoint(head_x-1, head_y));
+    snake_parts.push_back(CPoint(head_x-2, head_y));
     paint();
   }
 
@@ -60,10 +58,10 @@ private:
     else if(direction == KEY_DOWN)  snake_parts[0] += CPoint(1,0);
     else if(direction == KEY_LEFT)  snake_parts[0] += CPoint(0,-1);
 
-    if(snake_parts[0].x == 0) parts[0].x = geom.size.x - 2;
-    if(snake_parts[0].x == geom.size.x - 1) parts[0].x = 1;
-    if(snake_parts[0].y == 0) parts[0].y = geom.size.y - 2;
-    if(snake_parts[0].y == geom.size.y - 1) parts[0].y = 1;
+    if(snake_parts[0].x == 0) snake_parts[0].x = geom.size.x - 2;
+    if(snake_parts[0].x == geom.size.x - 1) snake_parts[0].x = 1;
+    if(snake_parts[0].y == 0) snake_parts[0].y = geom.size.y - 2;
+    if(snake_parts[0].y == geom.size.y - 1) snake_parts[0].y = 1;
 
     for(unsigned int i = 1; i < snake_parts.size(); i++){
       if(snake_parts[0].x == snake_parts[i].x && snake_parts[0].y == snake_parts[i].y)
@@ -71,8 +69,9 @@ private:
     }
 
     if(snake_parts[0] == food){
-      snake_parts.push_back(tail);
+      snake_parts.push_back(tail_part);
       generateFood();
+      if(speed > 1) speed--;
       level++;
     }
     return true;
@@ -80,19 +79,19 @@ private:
 
   void draw_game(){
     if(move() == false){
-      pause = true;
+      pause_game = true;
       death = true;
     }
     gotoyx(snake_parts[0].y + geom.topleft.y ,snake_parts[0].x + geom.topleft.x);
-    printc("*");
+    printc('*');
 
     for(unsigned int i = 1; i < snake_parts.size(); i++){
       gotoyx(snake_parts[i].y + geom.topleft.y ,snake_parts[i].x + geom.topleft.x);
-    printc("+");
+    printc('+');
     }
 
     gotoyx(food.y + geom.topleft.y ,food.x + geom.topleft.x);
-    printc("O");
+    printc('O');
 
   }
 
@@ -119,7 +118,55 @@ private:
   }
 
 public:
-  CSnake(CRect r, char _c = ' ');
+  CSnake(CRect r, char _c = ' ') : CFramedWindow(r, _c) {
+    srand(time(NULL));
+    reset();
+    pause_game = true;
+    draw_game();
+  }
+
+  bool handleEvent(int key){
+    if(!pause && key == ERR){
+      ticks++;
+      if(speed <= ticks) {
+        return move();
+        ticks = 0;
+      }
+    }
+    if(!died && key == 'p'){
+      pause = !pause;
+      return true;
+    }
+    if(key == 'q') exit(0);
+    if(key == 'r'){
+      reset();
+      return true;
+    }
+
+    if(key == '\t') return true;
+
+    if(!died && !pause){
+      if( (key == KEY_UP && direction != KEY_DOWN) || 
+      (key == KEY_RIGHT && direction != KEY_LEFT) ||
+      (key == KEY_DOWN && direction != KEY_UP) ||
+      (key == KEY_LEFT && direction != KEY_RIGHT))
+        direction = key;
+      return true;
+    }
+    return CFramedWindow::handleEvent(key);
+  }
+
+  void paint(){
+    CFramedWindow::paint();
+    draw_game();
+    if(!death){
+      gotoyx(geom.topleft.y-1, geom.topleft.x);
+      printl("| Level: %d || Speed: %d |", level, speed);
+      if(pause) draw_pause();
+    } else{
+      draw_dead();
+    }
+  }
 };
 
 #endif
