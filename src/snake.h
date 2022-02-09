@@ -1,6 +1,7 @@
 #ifndef __SNAKE_H__
 #define __SNAKE_H__
 
+#include <vector>
 #include <cstdlib>
 
 #include "winsys.h"
@@ -75,8 +76,48 @@ private:
       level++;
     }
     return true;
-    
   }
+
+  void draw_game(){
+    if(move() == false){
+      pause = true;
+      death = true;
+    }
+    gotoyx(snake_parts[0].y + geom.topleft.y ,snake_parts[0].x + geom.topleft.x);
+    printc("*");
+
+    for(unsigned int i = 1; i < snake_parts.size(); i++){
+      gotoyx(snake_parts[i].y + geom.topleft.y ,snake_parts[i].x + geom.topleft.x);
+    printc("+");
+    }
+
+    gotoyx(food.y + geom.topleft.y ,food.x + geom.topleft.x);
+    printc("O");
+
+  }
+
+  void draw_pause(){
+    gotoyx(geom.topleft.y + 2, geom.topleft.x + 2);
+    printl("GAME PAUSED");
+    gotoyx(geom.topleft.y + 3, geom.topleft.x + 2);
+    printl("p - toggle play/pause mode");
+    gotoyx(geom.topleft.y + 4, geom.topleft.x + 2);
+    printl("r - restart");
+    gotoyx(geom.topleft.y + 5, geom.topleft.x + 2);
+    printl("q - quit the game");
+    gotoyx(geom.topleft.y + 6, geom.topleft.x + 2);
+    printl("Arrow keys: move the snake");
+    gotoyx(geom.topleft.y + 7, geom.topleft.x + 2);
+    printl("Arrow keys in pause mode: move the window");
+  }
+
+  void draw_dead(){
+    gotoyx(geom.topleft.y + 2, geom.topleft.x + 2);
+    printl("GAME OVER");
+    gotoyx(geom.topleft.y + 3, geom.topleft.x + 2);
+    printl("Score: %d", level);
+  }
+
 public:
   CSnake(CRect r, char _c = ' ');
 };
