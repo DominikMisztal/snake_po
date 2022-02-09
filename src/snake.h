@@ -48,6 +48,35 @@ private:
     }
     food = spot;
   }
+
+  bool move(){
+    if(pause_game) return true;
+    CPoint tail_part = snake_parts.back();
+    for(unsigned int i = snake_parts.size() - 1; i > 0; i--) snake_parts[i] = snake_parts[i-1];
+
+    if(direction == KEY_UP)         snake_parts[0] += CPoint(-1,0);
+    else if(direction == KEY_RIGHT) snake_parts[0] += CPoint(0,1);
+    else if(direction == KEY_DOWN)  snake_parts[0] += CPoint(1,0);
+    else if(direction == KEY_LEFT)  snake_parts[0] += CPoint(0,-1);
+
+    if(snake_parts[0].x == 0) parts[0].x = geom.size.x - 2;
+    if(snake_parts[0].x == geom.size.x - 1) parts[0].x = 1;
+    if(snake_parts[0].y == 0) parts[0].y = geom.size.y - 2;
+    if(snake_parts[0].y == geom.size.y - 1) parts[0].y = 1;
+
+    for(unsigned int i = 1; i < snake_parts.size(); i++){
+      if(snake_parts[0].x == snake_parts[i].x && snake_parts[0].y == snake_parts[i].y)
+        return false;
+    }
+
+    if(snake_parts[0] == food){
+      snake_parts.push_back(tail);
+      generateFood();
+      level++;
+    }
+    return true;
+    
+  }
 public:
   CSnake(CRect r, char _c = ' ');
 };
