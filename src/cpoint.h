@@ -10,6 +10,11 @@ struct CPoint
   int x;
   int y;
   CPoint(int _x=0, int _y=0): x(_x), y(_y) {};
+
+  bool operator==(const CPoint& point){
+    if(x == point.x && y == point.y) return true;
+    return false;
+  }
   CPoint& operator+=(const CPoint& delta)
   {
     x+=delta.x;

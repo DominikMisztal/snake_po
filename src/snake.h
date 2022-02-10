@@ -25,7 +25,7 @@ private:
     death = false;
     direction = KEY_RIGHT;
     level = 0;
-    speed = 50;
+    speed = 40;
     ticks = 0;
     int head_x = rand() % (geom.size.x - 4) + 4;
     int head_y = rand() % (geom.size.y - 4) + 4;
@@ -33,14 +33,15 @@ private:
     snake_parts.push_back(CPoint(head_x, head_y));
     snake_parts.push_back(CPoint(head_x-1, head_y));
     snake_parts.push_back(CPoint(head_x-2, head_y));
+    generateFood();
     paint();
   }
 
   void generateFood(){
     CPoint spot;
     while(true){
-      spot = CPoint( (rand() % (geom.size.x - 1)) + 1, (rand() % (geom.size.y -1 )) + 1);
-      for(int i = 0; i < snake_parts.size(); i ++){
+      spot = CPoint( (rand() % (geom.size.x - 3)) + 2, (rand() % (geom.size.y -3 )) + 2);
+      for(unsigned int i = 0; i < snake_parts.size(); i ++){
         if(spot == snake_parts[i]) continue;
       }
       break;
@@ -53,10 +54,10 @@ private:
     CPoint tail_part = snake_parts.back();
     for(unsigned int i = snake_parts.size() - 1; i > 0; i--) snake_parts[i] = snake_parts[i-1];
 
-    if(direction == KEY_UP)         snake_parts[0] += CPoint(-1,0);
-    else if(direction == KEY_RIGHT) snake_parts[0] += CPoint(0,1);
-    else if(direction == KEY_DOWN)  snake_parts[0] += CPoint(1,0);
-    else if(direction == KEY_LEFT)  snake_parts[0] += CPoint(0,-1);
+    if(direction == KEY_UP)         snake_parts[0] += CPoint(0,-1);
+    else if(direction == KEY_RIGHT) snake_parts[0] += CPoint(1,0);
+    else if(direction == KEY_DOWN)  snake_parts[0] += CPoint(0,1);
+    else if(direction == KEY_LEFT)  snake_parts[0] += CPoint(-1,0);
 
     if(snake_parts[0].x == 0) snake_parts[0].x = geom.size.x - 2;
     if(snake_parts[0].x == geom.size.x - 1) snake_parts[0].x = 1;
@@ -67,6 +68,7 @@ private:
       if(snake_parts[0].x == snake_parts[i].x && snake_parts[0].y == snake_parts[i].y)
         return false;
     }
+   
 
     if(snake_parts[0] == food){
       snake_parts.push_back(tail_part);
@@ -78,7 +80,7 @@ private:
   }
 
   void draw_game(){
-    if(move() == false){
+    if(ticks == 0 && move() == false){
       pause_game = true;
       death = true;
     }
@@ -126,15 +128,14 @@ public:
   }
 
   bool handleEvent(int key){
-    if(!pause && key == ERR){
+    if(!pause_game && key == ERR){
       ticks++;
       if(speed <= ticks) {
-        return move();
         ticks = 0;
       }
     }
-    if(!died && key == 'p'){
-      pause = !pause;
+    if(!death && key == 'p'){
+      pause_game = !pause_game;
       return true;
     }
     if(key == 'q') exit(0);
@@ -143,14 +144,17 @@ public:
       return true;
     }
 
-    if(key == '\t') return true;
+    if(key == '\t') pause_game = true;
 
-    if(!died && !pause){
+    if(!death && !pause_game){
       if( (key == KEY_UP && direction != KEY_DOWN) || 
       (key == KEY_RIGHT && direction != KEY_LEFT) ||
       (key == KEY_DOWN && direction != KEY_UP) ||
-      (key == KEY_LEFT && direction != KEY_RIGHT))
+      (key == KEY_LEFT && direction != KEY_RIGHT)){
         direction = key;
+        if(move() == false) death = true;
+        ticks = 1;
+      }
       return true;
     }
     return CFramedWindow::handleEvent(key);
@@ -162,7 +166,7 @@ public:
     if(!death){
       gotoyx(geom.topleft.y-1, geom.topleft.x);
       printl("| Level: %d || Speed: %d |", level, speed);
-      if(pause) draw_pause();
+      if(pause_game) draw_pause();
     } else{
       draw_dead();
     }
